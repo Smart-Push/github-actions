@@ -13,10 +13,5 @@ runs:
   using: "composite"
   steps:
     - id: set-hosts-matrix
-      run: echo "::set-output name=hosts-matrix::{
-        \"prod\": \"smartpush\", 
-        \"preprod\": \"smartpush_preprod\", 
-        \"recette1\": \"smartpush_recette1\", 
-        \"recette2\": \"smartpush_recette2\", 
-        "recette3\": \"smartpush_recette3\"}"
+      run: echo "::set-output name=hosts-matrix::{\"prod\": \"smartpush\",\"preprod\": \"smartpush_preprod\",\"recette1\": \"smartpush_recette1\",\"recette2\": \"smartpush_recette2\","recette3\": \"smartpush_recette3\"}"
       shell: bash
