@@ -8,7 +8,7 @@ inputs:
 outputs:
   host: # id of the output
     description: 'Host where the repo will deployed to'
-    value: ${{ toJSON(steps.set-hosts-matrix.outputs.hosts-matrix) }}
+    value: ${{ toJSON(steps.set-hosts-matrix.outputs.hosts-matrix)['prod'] }}
 runs:
   using: "composite"
   steps:
