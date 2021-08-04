@@ -8,10 +8,10 @@ inputs:
 outputs:
   host: # id of the output
     description: 'Host where the repo will deployed to'
-    value: ${{ fromJSON({"prod":"smartpush","recette1":"smartpush_recette1"}) }} #steps.set-hosts-matrix.outputs.hosts-matrix
+    value: ${{ steps.set-hosts-matrix.outputs.hosts-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
 runs:
   using: "composite"
   steps:
     - id: set-hosts-matrix
-      run: echo '::set-output name=hosts-matrix::{"prod":"smartpush","recette1":"smartpush_recette1"}'
+      run: echo "::set-output name=hosts-matrix::{\"prod\":\"smartpush\",\"recette1\":\"smartpush_recette1\"}"
       shell: bash
