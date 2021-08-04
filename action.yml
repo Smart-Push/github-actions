@@ -1,10 +1,6 @@
 name: Target Environment
 author: OlivierP-SP
 description: Determine which env to deploy a repo
-inputs:
-  target-host:
-    description: 'Where to deploy'
-    required: true
 outputs:
   host: # id of the output
     description: 'Host where the repo will deployed to'
@@ -13,5 +9,5 @@ runs:
   using: "composite"
   steps:
     - id: set-hosts-matrix
-      run: echo "::set-output name=hosts-matrix::{\"prod\":\"smartpush\",\"recette1\":\"smartpush_recette1\"}"
+      run: echo "::set-output name=hosts-matrix::{\"prod\":\"smartpush\",\"preprod\":\"smartpush_preprod\",\"recette1\":\"smartpush_recette1\",\"recette2\":\"smartpush_recette2\",\"recette3\":\"smartpush_recette3\"}"
       shell: bash
