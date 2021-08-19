@@ -5,9 +5,16 @@ outputs:
   host: # id of the output
     description: 'Host where the repo will deployed to'
     value: ${{ steps.set-hosts-matrix.outputs.hosts-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
+  env: # id of the output
+    description: 'Environment option to build app'
+    value: ${{ steps.set-hosts-matrix.outputs.hosts-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
+
 runs:
   using: "composite"
   steps:
     - id: set-hosts-matrix
       run: echo "::set-output name=hosts-matrix::{\"prod\":\"smartpush\",\"master\":\"smartpush\",\"preprod\":\"smartpush_preprod\",\"develop\":\"smartpush_preprod\",\"recette1\":\"smartpush_recette1\",\"recette2\":\"smartpush_recette2\",\"recette3\":\"smartpush_recette3\"}"
+      shell: bash
+    - id: set-env-matrix
+      run: echo "::set-output name=env-matrix::{\"master\":\"prod\",\"develop\":\"preprod\"}"
       shell: bash
