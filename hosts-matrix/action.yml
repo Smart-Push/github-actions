@@ -7,7 +7,7 @@ outputs:
     value: ${{ steps.set-hosts-matrix.outputs.hosts-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
   env: # id of the output
     description: 'Environment option to build app'
-    value: ${{ steps.set-hosts-matrix.outputs.hosts-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
+    value: ${{ steps.set-hosts-matrix.outputs.env-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
 
 runs:
   using: "composite"
