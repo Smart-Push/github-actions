@@ -8,6 +8,12 @@ outputs:
   env: # id of the output
     description: 'Environment option to build app'
     value: ${{ steps.set-env-matrix.outputs.env-matrix }} #steps.set-hosts-matrix.outputs.hosts-matrix
+  data-host: # id of the output
+    description: 'Data Host where the repo will deployed to'
+    value: ${{ steps.set-data-hosts-matrix.outputs.data-hosts-matrix }} 
+  data-env: # id of the output
+    description: 'Data Environment option to build app'
+    value: ${{ steps.set-data-env-matrix.outputs.data-env-matrix }}
 
 runs:
   using: "composite"
@@ -17,4 +23,10 @@ runs:
       shell: bash
     - id: set-env-matrix
       run: echo "::set-output name=env-matrix::{\"master\":\"prod\",\"develop\":\"preprod\"}"
+      shell: bash
+    - id: set-data-hosts-matrix
+      run: echo "::set-output name=data-hosts-matrix::{\"prod\":\"smartpushpython\",\"main\":\"smartpushpython\",\"preprod\":\"smartpushpythonpp\",\"develop\":\"smartpushpythonpp\",\"recette1\":\"smartpushpython_recette1\",\"recette2\":\"smartpushpython_recette2\",\"recette3\":\"smartpushpython_recette3\"}"
+      shell: bash
+    - id: set-data-env-matrix
+      run: echo "::set-output name=data-env-matrix::{\"main\":\"prod\",\"develop\":\"preprod\"}"
       shell: bash
