@@ -1,0 +1,155 @@
+name: Deploy
+author: Olivier PIEGAY
+description: Action to deploy a branch in a specific environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: on which env to deploy current branch
+        required: true
+        type: string
+      text:
+        description: message to display during deployment
+        required: false
+        type: string
+
+jobs:
+  publish-branch:
+    name: Publish / $ {{ inputs.environment }}
+    env:
+      APP_NAME: ${{ github.event.repository.name }}
+    runs-on: ubuntu-latest
+    steps:
+      # Slack - start deployment
+      - name: Slack - start deployment
+        uses: tokorom/action-slack-incoming-webhook@main
+        env:
+          INCOMING_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          blocks: |
+            [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "${{ github.event.repository.name }} - ${{ inputs.environment }} deployment start"
+                }
+              },
+              {
+                "type": "divider"
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "Launched by"
+                  },
+                  {
+                    "type": "image",
+                    "image_url": "${{ github.event.sender.avatar_url }}",
+                    "alt_text": "${{ github.actor }}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*${{ github.actor }}*"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Ref*: ${{ github.ref }}\n${{ inputs.text }}"
+                }
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "Follow",
+                      "emoji": true
+                    },
+                    "action_id": "follow",
+                    "url": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }
+            ]
+
+      # Calculate destination folder name
+      - name: Calculate destination folder
+        id: dst-folder
+        run: echo "##[set-output name=folder]$(date +%F.%H%M%S)"
+      # Download artifact
+      - name: Download artifact
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.ref_name == 'develop'
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.base_ref }}
+          path: ./dist/apps/
+      # Download release Asset
+      - name: Download release Asset
+        if: github.event_name == 'release'
+        env:
+          ASSET: ${{ github.event.release.assets[0].name }}
+        uses: dsaltares/fetch-gh-release-asset@1.0.0
+        with:
+          file: ${{ env.ASSET }}
+          target: ./dist/apps/
+      # Unzip release asset
+      - name: Unzip release asset
+        if: (github.event_name == 'release')
+        run: unzip ${{ github.event.release.assets[0].name }}
+        working-directory: ./dist/apps/
+      # Checkout Smartpush action
+      - name: Checkout Smartpush action
+        uses: actions/checkout@v3
+        with:
+          repository: Smart-Push/github-actions
+          ref: v1.0.5
+          token: ${{ secrets.REPOS_ACCESS_TOKEN }}
+          path: ./.github/actions
+      # Get hosts matrix
+      - name: Get hosts matrix
+        id: hosts-matrix
+        uses: ./.github/actions/hosts-matrix
+      # Prepare SSH
+      - name: Prepare SSH
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
+      # Deploy & change symlinks
+      - name: Deploy & change symlinks
+        env:
+          TARGET_ENV: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
+          PATH: /releases/${{ steps.dst-folder.outputs.folder }}
+        run: |
+          scp -r ./dist/apps/${{ env.APP_NAME }}/ ${{ env.TARGET_ENV }}@${{ secrets.DEPLOY_SSH_HOST }}:~/${{ env.APP_NAME }}${{ env.PATH }}
+          ssh ${{ env.TARGET_ENV }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
+            cd ${{ env.APP_NAME }} 
+            if [ -L current ]; then unlink current; fi
+            ln -fs ${{ env.PATH }} current 
+            cd current && if [ -L shared ]; then unlink shared; fi && ln -fs ~/shared
+          EOF
+      # Slack - deployment result
+      - name: Slack - deployment result
+        uses: tokorom/action-slack-incoming-webhook@main
+        env:
+          INCOMING_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
+          blocks: |
+            [
+              {
+                "type": "section",
+                "text": {
+                  "type": "plain_text",
+                  "text": "GitHub Action build result: ${{ job.status }}"
+                }
+              }
+            ]
