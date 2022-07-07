@@ -38,7 +38,6 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
             -Dsonar.projectVersion=${{ inputs.release }}
       # Runs after Pull Request decoration to lock merge if quality gate fails
       - name: SonarQube Quality Gate check
