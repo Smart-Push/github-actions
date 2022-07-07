@@ -1,0 +1,48 @@
+name: Deploy
+author: Olivier PIEGAY
+description: Workflow that runs quality tools on our source code
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: type of langage (PHP/TS/Node)
+        required: false
+        type: string
+      release:
+        description: release number if necessary
+        required: false
+        type: string
+
+jobs:
+  code-analysis:
+    name: Execute CI in context
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    steps:
+      - name: "Checkout source code"
+        uses: actions/checkout@v2.4.2
+        with:
+          fetch-depth: 0
+      # TODO: run all optional quality tools depending on language and send report to Sonar
+      # Runs only on Pull Request opened where target branch is develop
+      - name: SonarQube - PR decoration
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop')
+        uses: sonarsource/sonarqube-scan-action@master
+      # Runs only when a Pull Request is merged onto master branch (default github branch)
+      - name: SonarQube - Release
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true  && github.base_ref == github.event.repository.default_branch
+        uses: sonarsource/sonarqube-scan-action@master
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.projectKey=${{ github.event.repository.name }}
+            -Dsonar.projectVersion=${{ inputs.release }}
+      # Runs after Pull Request decoration to lock merge if quality gate fails
+      - name: SonarQube Quality Gate check
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop')
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        # Force to fail step after specific time
+        timeout-minutes: 5
