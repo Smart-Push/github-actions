@@ -6,7 +6,7 @@ on:
   workflow_call:
     inputs:
       language:
-        description: type of langage (PHP/TS/Node)
+        description: type of language (PHP/TS/Node)
         required: false
         type: string
       release:
