@@ -27,7 +27,7 @@ jobs:
       # TODO: run all optional quality tools depending on language and send report to Sonar
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop')
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
         uses: sonarsource/sonarqube-scan-action@master
       # Runs only when a Pull Request is merged onto master branch (default github branch)
       - name: SonarQube - Release
