@@ -39,7 +39,7 @@ jobs:
             -Dsonar.projectVersion=${{ inputs.release }}
       # Runs after Pull Request decoration to lock merge if quality gate fails
       - name: SonarQube Quality Gate check
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop')
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
         uses: sonarsource/sonarqube-quality-gate-action@master
         # Force to fail step after specific time
         timeout-minutes: 5
