@@ -1,0 +1,45 @@
+name: Deploy
+author: Olivier PIEGAY
+description: Workflow that runs quality tools on our source code
+
+on:
+  workflow_call:
+    outputs:
+      release: $ {{ jobs.create-release.outputs.release }}
+jobs:
+  create-release:
+    # runs only when pushing to master with a merge PR, create a release
+    name: Create Release
+    outputs:
+      release: ${{ steps.release-drafter.outputs.tag_name }}
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true  && github.base_ref == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Drafter
+        id: release-drafter
+        uses: release-drafter/release-drafter@v5
+        with:
+          config-name: config-release-drafter.yml
+          commitish: master
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ github.base_ref }}
+          path: .
+      - name: Create asset
+        run:
+          zip -r ${{ steps.release-drafter.outputs.tag_name }}.zip ./
+        working-directory: .
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release-drafter.outputs.upload_url }}
+          asset_path: ${{ github.base_ref }}-${{ steps.release-drafter.outputs.tag_name }}.zip
+          asset_name: ${{ github.base_ref }}-${{ steps.release-drafter.outputs.tag_name }}.zip
+          asset_content_type: application/zip
