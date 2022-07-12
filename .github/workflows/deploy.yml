@@ -1,6 +1,4 @@
 name: Deploy
-author: Olivier PIEGAY
-description: Action to deploy a branch in a specific environment
 
 on:
   workflow_call:

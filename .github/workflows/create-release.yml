@@ -1,6 +1,4 @@
 name: Deploy
-author: Olivier PIEGAY
-description: Workflow that runs quality tools on our source code
 
 on:
   workflow_call:

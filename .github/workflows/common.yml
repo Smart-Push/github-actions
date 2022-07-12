@@ -1,6 +1,4 @@
 name: Common actions for Github actions
-author: Olivier PIEGAY
-description: bunch of commonly used workflows
 
 on:
   workflow_call:
