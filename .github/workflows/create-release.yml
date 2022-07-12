@@ -3,7 +3,9 @@ name: Deploy
 on:
   workflow_call:
     outputs:
-      release: ${{ jobs.create-release.outputs.release }}
+      release:
+        description: release number
+        value: ${{ jobs.create-release.outputs.release }}
 jobs:
   create-release:
     # runs only when pushing to master with a merge PR, create a release
