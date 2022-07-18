@@ -123,13 +123,20 @@ jobs:
         with:
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
-      # Deploy & change symlinks
-      - name: Deploy & change symlinks
+      # Deploy code
+      - name: Deploy code
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
+          source: ./dist/apps/${{ env.APP_NAME }}/
+          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
+      # Change symlinks
+      - name: Change symlinks
         env:
           TARGET_ENV: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
           PATH: /releases/${{ steps.dst-folder.outputs.folder }}
         run: |
-          scp -r ./dist/apps/${{ env.APP_NAME }}/ ${{ env.TARGET_ENV }}@${{ secrets.DEPLOY_SSH_HOST }}:~/${{ env.APP_NAME }}${{ env.PATH }}
           ssh ${{ env.TARGET_ENV }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
             cd ${{ env.APP_NAME }} 
             if [ -L current ]; then unlink current; fi
