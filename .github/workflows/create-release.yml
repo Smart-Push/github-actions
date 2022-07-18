@@ -40,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release-drafter.outputs.upload_url }}
-          asset_path: ${{ github.base_ref }}-${{ steps.release-drafter.outputs.tag_name }}.zip
-          asset_name: ${{ github.base_ref }}-${{ steps.release-drafter.outputs.tag_name }}.zip
+          asset_path: ${{ steps.release-drafter.outputs.tag_name }}.zip
+          asset_name: ${{ steps.release-drafter.outputs.tag_name }}.zip
           asset_content_type: application/zip
