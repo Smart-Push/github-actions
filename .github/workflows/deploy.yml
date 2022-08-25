@@ -9,7 +9,7 @@ on:
         type: string
       text:
         description: message to display during deployment
-        required: false
+        required: true
         type: string
         default: ":trollface:"
 
@@ -21,7 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "debug"
-        run: echo ${{ inputs.text }}
+        run: |
+          echo "test"
+          echo ${{ inputs.text }}
 
       - name: "format Slack message"
         id: markdwn
