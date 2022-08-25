@@ -117,26 +117,21 @@ jobs:
       - name: Get hosts matrix
         id: hosts-matrix
         uses: ./.github/actions/hosts-matrix
+      - name: Prepare SSH
+        uses: shimataro/ssh-key-action@v2.3.0
+        with:
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
       # Deploy code
       - name: Deploy code
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.DEPLOY_SSH_HOST }}
-          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
-          source: ./dist/apps/*
-          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
-      # Change symlinks
-      - name: Change symlinks
         env:
-          TARGET_ENV: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
-          PATH: /releases/${{ steps.dst-folder.outputs.folder }}
+          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[github.base_ref] }}
+          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
         run: |
-          ssh ${{ env.TARGET_ENV }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
-            cd ${{ env.APP_NAME }} 
-            if [ -L current ]; then unlink current; fi
-            ln -fs ${{ env.PATH }} current 
-            cd current && if [ -L shared ]; then unlink shared; fi && ln -fs ~/shared
+          scp -r ${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
+          ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
+            cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
+            cd current && ln -fs ~/shared/data
           EOF
       # Slack - deployment result
       - name: Slack - deployment result
