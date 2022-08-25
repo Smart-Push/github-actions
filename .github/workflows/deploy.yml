@@ -117,17 +117,12 @@ jobs:
       - name: Get hosts matrix
         id: hosts-matrix
         uses: ./.github/actions/hosts-matrix
-      # Prepare SSH
-      - name: Prepare SSH
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
       # Deploy code
       - name: Deploy code
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
           source: ./dist/apps/${{ env.APP_NAME }}/
           target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}

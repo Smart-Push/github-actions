@@ -2,10 +2,18 @@ name: Common actions for Github actions
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        description: optional environment when action is triggered manually
+        required: false
+        type: string
     outputs:
       branch:
         description: "Current branch triggering action"
         value: ${{ jobs.setup-env.outputs.branch }}
+      environment:
+        description: Environment to execute (deploy) an action
+        value: ${{ jobs.setup-env.outputs.environment }}
 
 jobs:
   setup-env:
@@ -13,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       branch: ${{ steps.extract_branch.outputs.branch }}
+      environment: ${{ steps.get-env.outputs.env }}
     env: { CONTENT: "${{ toJson(github) }}" }
     steps:
       - name: debug Github object
@@ -22,3 +31,14 @@ jobs:
         id: extract_branch
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+
+      - name: get environment from workflow
+        id: get-env
+        shell: bash
+        run: |
+          if [ ${{ github.event }} == 'workflow_dispatch' ];
+          then
+            echo "::set-output name=env::${{ inputs.environment }}"
+          else
+            [[ ${{ github.base_ref }} == "develop" ]] && echo "::set-output name=env::preprod" || echo "::set-output name=env::prod"
+          fi
