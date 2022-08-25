@@ -36,9 +36,9 @@ jobs:
         id: get-env
         shell: bash
         run: |
-          if [ ${{ github.event }} == 'workflow_dispatch' ];
+          if [ '${{ github.event_name }}' == 'workflow_dispatch' ];
           then
             echo "::set-output name=env::${{ inputs.environment }}"
           else
-            [[ ${{ github.base_ref }} == "develop" ]] && echo "::set-output name=env::preprod" || echo "::set-output name=env::prod"
+            [[ '${{ github.base_ref }}' == 'develop' ]] && echo "::set-output name=env::preprod" || echo "::set-output name=env::prod"
           fi
