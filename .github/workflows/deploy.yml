@@ -125,7 +125,7 @@ jobs:
       # Deploy code
       - name: Deploy code
         env:
-          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[github.base_ref] }}
+          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
           target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
         run: |
           scp -r ${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
