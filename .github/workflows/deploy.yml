@@ -19,11 +19,6 @@ jobs:
       APP_NAME: ${{ github.event.repository.name }}
     runs-on: ubuntu-latest
     steps:
-      - name: "debug"
-        run: |
-          echo "test"
-          echo ${{ inputs.text }}
-
       - name: "format Slack message"
         id: markdwn
         uses: LoveToKnow/slackify-markdown-action@v1.0.0
