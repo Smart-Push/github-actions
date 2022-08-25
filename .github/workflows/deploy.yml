@@ -11,7 +11,7 @@ on:
         description: message to display during deployment
         required: false
         type: string
-        default: " "
+        default: ":trollface:"
 
 jobs:
   publish-branch:
