@@ -19,6 +19,12 @@ jobs:
       APP_NAME: ${{ github.event.repository.name }}
     runs-on: ubuntu-latest
     steps:
+      - name: "format Slack message"
+        id: markdwn
+        uses: LoveToKnow/slackify-markdown-action@v1.0.0
+        with:
+          text: ${{ inputs.text }}
+
       # Slack - start deployment
       - name: Slack - start deployment
         uses: tokorom/action-slack-incoming-webhook@main
@@ -59,7 +65,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Ref*: ${{ github.ref }}\n${{ inputs.text }}"
+                  "text": "*Ref*: ${{ github.ref }}\n${{ steps.markdwn.outputs.text }}"
                 }
               },
               {
