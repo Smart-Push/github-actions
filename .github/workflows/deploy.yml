@@ -89,7 +89,7 @@ jobs:
           || (github.event_name == 'workflow_dispatch')
         uses: actions/download-artifact@v3
         with:
-          name: ${{ github.base_ref }}
+          name: artifact
           path: ./dist/apps/
       # Download release Asset
       - name: Download release Asset
@@ -124,7 +124,7 @@ jobs:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
-          source: ./dist/apps/${{ env.APP_NAME }}/
+          source: ./dist/apps/
           target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
       # Change symlinks
       - name: Change symlinks
