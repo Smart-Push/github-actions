@@ -9,9 +9,9 @@ on:
         type: string
       text:
         description: message to display during deployment
-        required: true
+        required: false
         type: string
-        default: ""
+        default: " "
 
 jobs:
   publish-branch:
