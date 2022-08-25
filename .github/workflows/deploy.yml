@@ -9,7 +9,7 @@ on:
         type: string
       text:
         description: message to display during deployment
-        required: false
+        required: true
         type: string
         default: ""
 
