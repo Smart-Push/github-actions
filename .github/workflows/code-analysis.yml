@@ -1,5 +1,4 @@
-name: Deploy
-
+name: Code analysis
 on:
   workflow_call:
     secrets:
@@ -13,27 +12,57 @@ on:
         required: false
         type: string
       release:
-        description: release number if necessary
+        description: release number
         required: false
         type: string
 
 jobs:
-  code-analysis:
-    name: Execute CI in context
+  code-analysis-php:
+    name: Execute CI in PHP context
+    uses: Smart-Push/github-actions/.github/workflows/code-analysis-php.yml@reusable_workflows
+    if: ${{ inputs.language }} == "php"
+    secrets: inherit
+
+  code-analysis-ts:
+    name: Execute CI in TS context
+    uses: Smart-Push/github-actions/.github/workflows/code-analysis-ts.yml@reusable_workflows
+    if: ${{ inputs.language }} == "ts"
+    secrets: inherit
+
+  code-analysis-node:
+    name: Execute CI in PHP context
+    uses: Smart-Push/github-actions/.github/workflows/code-analysis-node.yml@reusable_workflows
+    if: ${{ inputs.language }} == "node"
+    secrets: inherit
+
+  sonarqube-workflow:
+    name: Execute SonarQube
     runs-on: ubuntu-latest
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    if: ${{ success() }}
+    needs: [ code-analysis-php, code-analysis-ts, code-analysis-node ]
     steps:
-      - name: "Checkout source code"
-        uses: actions/checkout@v2.4.2
-        with:
-          fetch-depth: 0
-      # TODO: run all optional quality tools depending on language and send report to Sonar
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
         uses: sonarsource/sonarqube-scan-action@master
+        with:
+          projectBaseDir: ./api
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Runs after Pull Request decoration to lock merge if quality gate fails
+      - name: SonarQube Quality Gate check
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        # Force to fail step after specific time
+        timeout-minutes: 5
+        with:
+          scanMetadataReportFile: ./api/.scannerwork/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
       # Runs only when a Pull Request is merged onto master branch (default github branch)
       - name: SonarQube - Release
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true  && github.base_ref == github.event.repository.default_branch
@@ -42,9 +71,3 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.projectVersion=${{ inputs.release }}
-      # Runs after Pull Request decoration to lock merge if quality gate fails
-      - name: SonarQube Quality Gate check
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        # Force to fail step after specific time
-        timeout-minutes: 5

@@ -1,0 +1,58 @@
+name: PHP Code analysis
+on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      SONAR_HOST_URL:
+        required: true
+
+jobs:
+  code-analysis-php:
+    name: Execute CI in PHP context
+    runs-on: ubuntu-latest
+    # runs only when pushing to a branch other than develop or master, or when creating a pull request on master or develop
+    if: github.event_name == 'pull_request' && github.event.action != 'closed' && contains(toJSON('["develop", "master"]'), github.base_ref)
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    steps:
+      - name: "Checkout source code"
+        uses: actions/checkout@v3
+
+      - name: "Prepare PHP"
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: imagick gd bcmath intl zip
+          coverage: xdebug
+          tools: phpstan phpunit
+        env:
+          fail-fast: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-interaction --no-suggest
+
+      - name: PHPStan Static Analysis
+        # PHPStan report errors with absolute path from runner, which is not accepted by Sonar yet
+        run: |
+          vendor/bin/phpstan --error-format=prettyJson > phpstan-results.json || true
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' phpstan-results.json
+
+      - name: Unit tests
+        run: |
+          cp .env.test.example .env.test
+          vendor/bin/phpunit --coverage-clover=coverage.xml --log-junit=tests-report.xml
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' coverage.xml tests-report.xml

@@ -15,7 +15,7 @@ on:
         description: Environment to execute (deploy) an action
         value: ${{ jobs.setup-env.outputs.environment }}
       message:
-        description: Slack message to send
+        description: Message to send
         value: ${{ jobs.setup-env.outputs.message }}
 
 jobs:
@@ -28,13 +28,13 @@ jobs:
       message: ${{ steps.get-message.outputs.message }}
     env: { CONTENT: "${{ toJson(github) }}" }
     steps:
-      - name: debug Github object
-        run: "echo $CONTENT"
+      - name : Echo github
+        run : "echo $CONTENT"
 
       - name: Extract branch name
         id: extract_branch
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: echo "$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
 
       - name: get environment from workflow
         id: get-env
@@ -42,9 +42,9 @@ jobs:
         run: |
           if [ '${{ github.event_name }}' == 'workflow_dispatch' ];
           then
-            echo "::set-output name=env::${{ inputs.environment }}"
+            echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           else
-            [[ '${{ github.base_ref }}' == 'develop' ]] && echo "::set-output name=env::preprod" || echo "::set-output name=env::prod"
+            [[ '${{ github.base_ref }}' == 'develop' ]] && echo "env=preprod" >> $GITHUB_OUTPUT || echo "env=prod" >> $GITHUB_OUTPUT
           fi
 
       - name: get message from workflow
@@ -53,7 +53,7 @@ jobs:
         run: |
           if [ '${{ github.event_name }}' == 'workflow_dispatch' ];
           then
-            echo "::set-output name=message:::trollface:"
+            echo "message=:trollface:" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=message::${{ github.event.pull_request.body }}"
+            echo "message=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
           fi
