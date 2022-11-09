@@ -56,3 +56,36 @@ jobs:
           cp .env.test.example .env.test
           vendor/bin/phpunit --coverage-clover=coverage.xml --log-junit=tests-report.xml
           sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' coverage.xml tests-report.xml
+
+      - name: debug path
+        run: |
+          pwd
+          ls -al
+
+      - name: Upload code artifact
+        uses: actions/upload-artifact@v3
+        id: upload-code-artifact
+        with:
+          name: code-workflow
+          path: |
+            src/
+            !bin/
+            !tests/
+            !coverage.xml
+            !tests-report.xml
+            !phpstan-results.json
+            !vendor/
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: Upload analysis files artifact
+        uses: actions/upload-artifact@v3
+        id: upload-analysis-artifact
+        with:
+          name: result-analysis-workflow
+          path: |
+            coverage.xml
+            tests-report.xml
+            phpstan-results.json
+          retention-days: 1
+          if-no-files-found: error
