@@ -23,7 +23,7 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     outputs:
-      branch: ${{ steps.extract_branch.outputs.branch }}
+      branch: ${{ github.head_ref }}
       environment: ${{ steps.get-env.outputs.env }}
       message: ${{ steps.get-message.outputs.message }}
     env: { CONTENT: "${{ toJson(github) }}" }
@@ -31,20 +31,25 @@ jobs:
       - name : Echo github
         run : "echo $CONTENT"
 
-      - name: Extract branch name
-        id: extract_branch
-        shell: bash
-        run: echo "$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
-
       - name: get environment from workflow
         id: get-env
         shell: bash
         run: |
-          if [ '${{ github.event_name }}' == 'workflow_dispatch' ];
+          if [ '${{ github.event_name }}' == 'workflow_dispatch' ]
           then
             echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           else
-            [[ '${{ github.base_ref }}' == 'develop' ]] && echo "env=preprod" >> $GITHUB_OUTPUT || echo "env=prod" >> $GITHUB_OUTPUT
+            case ${{ github.base_ref }} in
+              master)
+                echo "env=prod" >> $GITHUB_OUTPUT
+                ;;
+              develop)
+                echo "env=preprod" >> $GITHUB_OUTPUT
+                ;;
+              *)
+                echo "env=other"
+                ;;
+            esac
           fi
 
       - name: get message from workflow
