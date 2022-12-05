@@ -17,10 +17,10 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
     steps:
-      - name: "Checkout source code"
+      - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: "Prepare PHP"
+      - name: Prepare PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
@@ -61,22 +61,6 @@ jobs:
         run: |
           pwd
           ls -al
-
-      - name: Upload code artifact
-        uses: actions/upload-artifact@v3
-        id: upload-code-artifact
-        with:
-          name: code-workflow
-          path: |
-            src/
-            !bin/
-            !tests/
-            !coverage.xml
-            !tests-report.xml
-            !phpstan-results.json
-            !vendor/
-          retention-days: 1
-          if-no-files-found: error
 
       - name: Upload analysis files artifact
         uses: actions/upload-artifact@v3

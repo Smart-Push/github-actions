@@ -46,24 +46,18 @@ jobs:
           pwd
           ls -al
 
-      - name: Download code artifact
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Download analysis artifacts
         id: download
         uses: actions/download-artifact@v3
-
-      - name: debug artifact path
-        working-directory: ${{steps.download.outputs.download-path}}
-        run: |
-          pwd
-          ls -al
-          ls -al code-workflow
-          ls -al result-analysis-workflow
 
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
         uses: sonarsource/sonarqube-scan-action@v1
         with:
-          projectBaseDir: ${{steps.download.outputs.download-path}}/code-workflow/
           args: >
             -Dsonar.php.phpstan.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/phpstan-results.json
             -Dsonar.php.coverage.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/coverage.xml
@@ -80,7 +74,7 @@ jobs:
         # Force to fail step after specific time
         timeout-minutes: 5
         with:
-          scanMetadataReportFile: ${{steps.download.outputs.download-path}}/code-workflow/.scannerwork/report-task.txt
+          scanMetadataReportFile: ${{ github.workspace }}/.scannerwork/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
