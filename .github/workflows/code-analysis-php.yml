@@ -51,7 +51,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-interaction --no-suggest
+        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-interaction
 
       - name: PHPStan Static Analysis
         # PHPStan report errors with absolute path from runner, which is not accepted by Sonar yet

@@ -8,7 +8,7 @@ on:
         required: true
     inputs:
       src_path:
-        description: path to sources
+        description: path to sources files
         required: false
         type: string
       language:
@@ -27,11 +27,6 @@ jobs:
     steps:
       - name: echo-context
         run: echo '${{ toJSON(inputs) }}'
-
-  setup-env:
-    name: Setup workflows
-    uses: Smart-Push/github-actions/.github/workflows/common.yml@reusable_workflows
-    secrets: inherit
 
   code-analysis-php:
     name: Execute CI in PHP context
@@ -97,7 +92,7 @@ jobs:
 
       # Runs only when a Pull Request is merged onto master branch (default github branch)
       - name: SonarQube - Release
-        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true  && github.base_ref == github.event.repository.default_branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == github.event.repository.default_branch
         uses: sonarsource/sonarqube-scan-action@master
         with:
           projectBaseDir: .
