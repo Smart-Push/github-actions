@@ -26,7 +26,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Change source code path
-        run: cd ${{ inputs.src_path }}
+        run: |
+          cd ${{ inputs.src_path }}
+          pwd
+          ls -al
 
       - name: Prepare PHP
         uses: shivammathur/setup-php@v2
