@@ -8,7 +8,7 @@ on:
         required: true
 
 jobs:
-  code-analysis-php:
+  code-analysis-ts:
     name: Execute CI in TypeScript context
     runs-on: ubuntu-latest
     # runs only when pushing to a branch other than develop or master, or when creating a pull request on master or develop
