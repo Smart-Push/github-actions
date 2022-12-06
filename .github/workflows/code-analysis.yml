@@ -56,7 +56,7 @@ jobs:
     name: Execute SonarQube
     runs-on: ubuntu-latest
     if: ${{ success() }}
-    needs: [ code-analysis-php, code-analysis-ts, code-analysis-node ]
+    needs: [ code-analysis-php ] #, code-analysis-ts, code-analysis-node ]
     steps:
       - name: debug path
         run: |
