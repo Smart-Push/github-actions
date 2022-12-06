@@ -36,21 +36,21 @@ jobs:
     with:
       src_path: ${{ inputs.src_path }}
 
-  code-analysis-ts:
-    name: Typescript code analysis
-    if: inputs.language == 'ts'
-    uses: Smart-Push/github-actions/.github/workflows/code-analysis-ts.yml@reusable_workflows
-    secrets: inherit
-    with:
-      src_path: ${{ inputs.src_path }}
-
-  code-analysis-node:
-    name: Node code analysis
-    if: inputs.language == 'node'
-    uses: Smart-Push/github-actions/.github/workflows/code-analysis-node.yml@reusable_workflows
-    secrets: inherit
-    with:
-      src_path: ${{ inputs.src_path }}
+#  code-analysis-ts:
+#    name: Typescript code analysis
+#    if: inputs.language == 'ts'
+#    uses: Smart-Push/github-actions/.github/workflows/code-analysis-ts.yml@reusable_workflows
+#    secrets: inherit
+#    with:
+#      src_path: ${{ inputs.src_path }}
+#
+#  code-analysis-node:
+#    name: Node code analysis
+#    if: inputs.language == 'node'
+#    uses: Smart-Push/github-actions/.github/workflows/code-analysis-node.yml@reusable_workflows
+#    secrets: inherit
+#    with:
+#      src_path: ${{ inputs.src_path }}
 
   sonarqube-workflow:
     name: Execute SonarQube
