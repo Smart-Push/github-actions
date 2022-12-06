@@ -7,6 +7,10 @@ on:
       SONAR_HOST_URL:
         required: true
     inputs:
+      src_path:
+        description: path to sources
+        required: false
+        type: string
       language:
         description: type of language (PHP/TS/Node)
         required: false
@@ -17,6 +21,18 @@ on:
         type: string
 
 jobs:
+  debug-context:
+    name: display current context
+    runs-on: ubuntu-latest
+    steps:
+      - name: echo-context
+        run: echo '${{ toJSON(inputs) }}'
+
+  setup-env:
+    name: Setup workflows
+    uses: Smart-Push/github-actions/.github/workflows/common.yml@reusable_workflows
+    secrets: inherit
+
   code-analysis-php:
     name: Execute CI in PHP context
     uses: Smart-Push/github-actions/.github/workflows/code-analysis-php.yml@reusable_workflows

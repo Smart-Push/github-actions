@@ -1,6 +1,11 @@
 name: PHP Code analysis
 on:
   workflow_call:
+    inputs:
+      src_path:
+        description: path to source code
+        type: string
+        required: false
     secrets:
       SONAR_TOKEN:
         required: true
@@ -19,6 +24,9 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
+
+      - name: Change source code path
+        run: cd ${{ inputs.src_path }}
 
       - name: Prepare PHP
         uses: shivammathur/setup-php@v2
