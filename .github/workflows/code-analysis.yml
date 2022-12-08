@@ -58,23 +58,26 @@ jobs:
     if: ${{ success() }}
     needs: [ code-analysis-php ] #, code-analysis-ts, code-analysis-node ]
     steps:
-      - name: debug path
-        run: |
-          pwd
-          ls -al
-
       - name: Checkout source code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Download analysis artifacts
         id: download
         uses: actions/download-artifact@v3
+
+      - name: debug path
+        run: |
+          pwd
+          ls -al
 
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
         uses: SonarSource/sonarqube-scan-action@v1.1.0
         with:
+          projectBaseDir: ${{ inputs.src_path }}
           args: >
             -Dsonar.php.phpstan.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/phpstan-results.json
             -Dsonar.php.coverage.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/coverage.xml
@@ -101,6 +104,6 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == github.event.repository.default_branch
         uses: SonarSource/sonarqube-scan-action@v1.1.0
         with:
-          projectBaseDir: .
+          projectBaseDir: ${{ inputs.src_path }}
           args: >
             -Dsonar.projectVersion=${{ inputs.release }}
