@@ -69,7 +69,7 @@ jobs:
 
       - name: debug path
         run: |
-          echo ${{steps.download.outputs.download-path}}
+          echo "${{steps.download.outputs.download-path}}"
           pwd
           ls -al ${{steps.download.outputs.download-path}}
 
