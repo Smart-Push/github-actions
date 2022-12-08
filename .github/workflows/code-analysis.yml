@@ -83,7 +83,6 @@ jobs:
             -Dsonar.php.phpstan.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/phpstan-results.json
             -Dsonar.php.coverage.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/coverage.xml
             -Dsonar.php.tests.reportPath=${{steps.download.outputs.download-path}}/result-analysis-workflow/tests-report.xml
-            -Dsonar.verbose=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
