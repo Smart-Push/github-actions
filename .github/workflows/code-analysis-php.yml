@@ -55,22 +55,17 @@ jobs:
       - name: PHPStan Static Analysis
         working-directory: ${{ inputs.src_path }}
         # PHPStan report errors with absolute path from runner, which is not accepted by Sonar yet
-        run: |
-          vendor/bin/phpstan --error-format=prettyJson --memory-limit=1G > phpstan-results.json
-          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' phpstan-results.json
+        run: vendor/bin/phpstan --error-format=prettyJson --memory-limit=1G > phpstan-results.json
 
       - name: Unit tests
         working-directory: ${{ inputs.src_path }}
         run: |
           cp .env.test.example .env.test
           vendor/bin/phpunit --coverage-clover=coverage.xml --log-junit=tests-report.xml
-          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' coverage.xml tests-report.xml
 
-      - name: debug path
+      - name: Update report paths
         working-directory: ${{ inputs.src_path }}
-        run: |
-          pwd
-          ls -al
+        run: sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' coverage.xml tests-report.xml phpstan-results.json
 
       - name: Upload analysis files artifact
         uses: actions/upload-artifact@v3
