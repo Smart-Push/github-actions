@@ -69,9 +69,8 @@ jobs:
 
       - name: debug path
         run: |
-          echo "${{steps.download.outputs.download-path}}"
           pwd
-          ls -al ${{steps.download.outputs.download-path}}
+          ls -al ${{steps.download.outputs.download-path}}/result-analysis-workflow
 
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
