@@ -56,6 +56,7 @@ jobs:
         working-directory: ${{ inputs.src_path }}
         # PHPStan report errors with absolute path from runner, which is not accepted by Sonar yet
         run: |
+          vendor/bin/phpstan --memory-limit=1G --debug
           vendor/bin/phpstan --error-format=prettyJson --memory-limit=1G > phpstan-results.json
           sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace@g' phpstan-results.json
 
