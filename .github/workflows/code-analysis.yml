@@ -66,11 +66,12 @@ jobs:
       - name: Download analysis artifacts
         id: download
         uses: actions/download-artifact@v3
+        with:
+          path: ${{ inputs.src_path }}
 
       - name: debug path
-        run: |
-          pwd
-          ls -al ${{steps.download.outputs.download-path}}/result-analysis-workflow
+        run: ls -al
+        working-directory: ${{ inputs.src_path }}
 
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
@@ -79,9 +80,9 @@ jobs:
         with:
           projectBaseDir: ${{ inputs.src_path }}
           args: >
-            -Dsonar.php.phpstan.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/phpstan-results.json
-            -Dsonar.php.coverage.reportPaths=${{steps.download.outputs.download-path}}/result-analysis-workflow/coverage.xml
-            -Dsonar.php.tests.reportPath=${{steps.download.outputs.download-path}}/result-analysis-workflow/tests-report.xml
+            -Dsonar.php.phpstan.reportPaths=phpstan-results.json
+            -Dsonar.php.coverage.reportPaths=coverage.xml
+            -Dsonar.php.tests.reportPath=tests-report.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
