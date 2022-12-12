@@ -70,27 +70,22 @@ jobs:
           name: result-analysis-workflow
           path: ${{ inputs.src_path }}
 
-      - name: debug path
-        run: ls -al
-        working-directory: ${{ inputs.src_path }}
-
       # Runs only on Pull Request opened where target branch is develop
       - name: SonarQube - PR decoration
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
         uses: SonarSource/sonarqube-scan-action@v1.1.0
         with:
           projectBaseDir: ${{ inputs.src_path }}
           args: >
             -Dsonar.php.phpstan.reportPaths=phpstan-results.json
             -Dsonar.php.coverage.reportPaths=coverage.xml
-            -Dsonar.php.tests.reportPath=tests-report.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       # Runs after Pull Request decoration to lock merge if quality gate fails
       - name: SonarQube Quality Gate check
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && github.base_ref == 'develop'
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
         uses: SonarSource/sonarqube-quality-gate-action@v1.0.0
         # Force to fail step after specific time
         timeout-minutes: 5
@@ -107,4 +102,5 @@ jobs:
         with:
           projectBaseDir: ${{ inputs.src_path }}
           args: >
+            -Dsonar.php.tests.reportPath=tests-report.xml
             -Dsonar.projectVersion=${{ inputs.release }}

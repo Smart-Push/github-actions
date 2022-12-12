@@ -16,14 +16,14 @@ jobs:
   code-analysis-php:
     name: Code analysis
     runs-on: ubuntu-latest-4-cores
-    # runs only when pushing to a branch other than develop or master, or when creating a pull request on master or develop
-    if: github.event_name == 'pull_request' && github.event.action != 'closed' && contains(toJSON('["develop", "master"]'), github.base_ref)
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Prepare PHP
         uses: shivammathur/setup-php@v2
@@ -54,7 +54,6 @@ jobs:
 
       - name: PHPStan Static Analysis
         working-directory: ${{ inputs.src_path }}
-        # PHPStan report errors with absolute path from runner, which is not accepted by Sonar yet
         run: vendor/bin/phpstan --error-format=json --memory-limit=1G > phpstan-results.json
 
       - name: Unit tests
