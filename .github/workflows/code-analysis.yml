@@ -54,7 +54,7 @@ jobs:
 
   sonarqube-workflow:
     name: Execute SonarQube
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-4-cores
     if: ${{ success() }}
     needs: [ code-analysis-php ] #, code-analysis-ts, code-analysis-node ]
     steps:
@@ -67,6 +67,7 @@ jobs:
         id: download
         uses: actions/download-artifact@v3
         with:
+          name: result-analysis-workflow
           path: ${{ inputs.src_path }}
 
       - name: debug path
