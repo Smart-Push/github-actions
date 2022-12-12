@@ -54,7 +54,7 @@ jobs:
 
       - name: PHPStan Static Analysis
         working-directory: ${{ inputs.src_path }}
-        run: vendor/bin/phpstan --error-format=json --memory-limit=1G > phpstan-results.json
+        run: vendor/bin/phpstan --xdebug --error-format=json --memory-limit=1G > phpstan-results.json
 
       - name: Unit tests
         working-directory: ${{ inputs.src_path }}
