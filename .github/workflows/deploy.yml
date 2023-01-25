@@ -21,7 +21,6 @@ on:
 
 jobs:
   publish-branch:
-    needs: [ setup-env ]
     name: Publish / ${{ inputs.environment }}
     env:
       APP_NAME: ${{ github.event.repository.name }}
