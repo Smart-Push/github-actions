@@ -117,7 +117,7 @@ jobs:
           scp -r ${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
           ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
             cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
-            cd current && ln -fs ~/shared/data
+            cd current && ln -fs ~/shared
           EOF
 
       # Teams - deployment result
