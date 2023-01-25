@@ -1,6 +1,11 @@
 name: Node Code analysis
 on:
   workflow_call:
+    inputs:
+      src_path:
+        description: path to source code
+        type: string
+        required: false
     secrets:
       SONAR_TOKEN:
         required: true
@@ -11,11 +16,25 @@ jobs:
   code-analysis-node:
     name: Execute CI in Node context
     runs-on: ubuntu-latest
-    # runs only when pushing to a branch other than develop or master, or when creating a pull request on master or develop
-    if: github.event_name == 'pull_request' && github.event.action != 'closed' && contains(toJSON('["develop", "master"]'), github.base_ref)
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+      -   name: Build Sources
+          run: |
+            npm install
+            npm run build
+      - name: Upload analysis files artifact
+        uses: actions/upload-artifact@v3
+        id: upload-artifact
+        with:
+          name: result-analysis-workflow
+          path: dist/apps/
+          retention-days: 1
+          if-no-files-found: error

@@ -21,6 +21,7 @@ on:
 
 jobs:
   publish-branch:
+    needs: [ setup-env ]
     name: Publish / ${{ inputs.environment }}
     env:
       APP_NAME: ${{ github.event.repository.name }}
@@ -44,8 +45,7 @@ jobs:
 
       # Download artifact
       - name: Download code artifact
-        if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.ref_name == 'develop') 
-          || (github.event_name == 'workflow_dispatch')
+        if: github.event_name != 'release'
         uses: actions/download-artifact@v3
         with:
           name: code-workflow
@@ -70,6 +70,7 @@ jobs:
       - name: Get hosts matrix
         id: hosts-matrix
         uses: ./.github/actions/hosts-matrix
+
       - name: Prepare SSH
         uses: shimataro/ssh-key-action@v2.4.0
         with:
