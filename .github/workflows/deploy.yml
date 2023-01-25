@@ -77,7 +77,7 @@ jobs:
           known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
 
       - name: Deploy PHP code
-        if: inputs.language == "php"
+        if: inputs.language == 'php'
         env:
           username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
           target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
@@ -109,7 +109,7 @@ jobs:
 #          EOF
 
       - name: Deploy Node code
-        if: inputs.language == "node"
+        if: inputs.language == 'node'
         env:
           username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
           target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
