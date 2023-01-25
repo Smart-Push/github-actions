@@ -1,4 +1,4 @@
-name: Deploy PHP code
+name: Deploy code
 on:
   workflow_call:
     inputs:
@@ -114,7 +114,7 @@ jobs:
           username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
           target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
         run: |
-          scp -r dist/apps/${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
+          scp -r ${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
           ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
             cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
             cd current && ln -fs ~/shared/data
