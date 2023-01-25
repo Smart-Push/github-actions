@@ -40,14 +40,14 @@ jobs:
       # Calculate destination folder name
       - name: Calculate destination folder
         id: dst-folder
-        run: echo "##[set-output name=folder]$(date +%F.%H%M%S)"
+        run: echo "folder=$(date +%F.%H%M%S)" >> $GITHUB_OUTPUT
 
       # Download artifact
       - name: Download code artifact
         if: github.event_name != 'release'
         uses: actions/download-artifact@v3
         with:
-          name: code-workflow
+          name: analysis-workflow-artifact
 
       # Download release Asset
       - name: Download release asset
@@ -76,7 +76,6 @@ jobs:
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
 
-      # Deploy code
       - name: Deploy PHP code
         if: ${{ inputs.language }} == "php"
         env:
@@ -109,22 +108,21 @@ jobs:
 #            ~/shared/api/opcache.sh ${{ github.base_ref}}
 #          EOF
 
-#      # Deploy code
-#      - name: Deploy TS code
-#        if: ${{ inputs.language }} == "ts"
-#        env:
-#          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
-#          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
-#        run: |
-#          scp -r dist/apps/${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
-#          ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
-#            cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
-#            cd current && ln -fs ~/shared/data
-#          EOF
+      - name: Deploy Node code
+        if: ${{ inputs.language }} == "node"
+        env:
+          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
+          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
+        run: |
+          scp -r dist/apps/${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
+          ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
+            cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
+            cd current && ln -fs ~/shared/data
+          EOF
 
       # Teams - deployment result
       - name: MS Teams deployment result
-        uses: toko-bifrost/ms-teams-deploy-card@master #  or "./" if in a local set-up
+        uses: toko-bifrost/ms-teams-deploy-card@master
         if: always()
         with:
           github-token: ${{ github.token }}

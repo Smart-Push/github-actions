@@ -59,7 +59,7 @@ jobs:
         id: download
         uses: actions/download-artifact@v3
         with:
-          name: result-analysis-workflow
+          name: analysis-workflow-artifact
           path: ${{ inputs.src_path }}
 
       # Runs only on Pull Request opened where target branch is develop

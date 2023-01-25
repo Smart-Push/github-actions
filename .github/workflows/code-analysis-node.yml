@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v3
         id: upload-artifact
         with:
-          name: result-analysis-workflow
+          name: analysis-workflow-artifact
           path: dist/apps/
           retention-days: 1
           if-no-files-found: error

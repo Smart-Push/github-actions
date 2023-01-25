@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v3
         id: upload-analysis-artifact
         with:
-          name: result-analysis-workflow
+          name: analysis-workflow-artifact
           path: |
             ${{ inputs.src_path }}/coverage.xml
             ${{ inputs.src_path }}/tests-report.xml
