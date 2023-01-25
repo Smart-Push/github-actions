@@ -39,7 +39,7 @@ jobs:
           then
             echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
           else
-            case ${{ github.base_ref }} in
+            case "${{ github.base_ref }}" in
               master) echo "env=prod" >> $GITHUB_OUTPUT ;;
               develop) echo "env=preprod" >> $GITHUB_OUTPUT ;;
               *) echo "env=other" ;;
