@@ -1,0 +1,58 @@
+name: Common actions for Github actions
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: optional environment when action is triggered manually
+        required: false
+        type: string
+    outputs:
+      branch:
+        description: "Current branch triggering action"
+        value: ${{ jobs.setup-env.outputs.branch }}
+      environment:
+        description: Environment to execute (deploy) an action
+        value: ${{ jobs.setup-env.outputs.environment }}
+      message:
+        description: Message to send
+        value: ${{ jobs.setup-env.outputs.message }}
+
+jobs:
+  setup-env:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ github.head_ref }}
+      environment: ${{ steps.get-env.outputs.env }}
+      message: ${{ steps.get-message.outputs.message }}
+    env: { CONTENT: "${{ toJson(github) }}" }
+    steps:
+      - name : Echo github
+        run : "echo $CONTENT"
+
+      - name: get environment from workflow
+        id: get-env
+        shell: bash
+        run: |
+          if [ '${{ github.event_name }}' == 'workflow_dispatch' ]
+          then
+            echo "env=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            case "${{ github.base_ref }}" in
+              master) echo "env=prod" >> $GITHUB_OUTPUT ;;
+              develop) echo "env=preprod" >> $GITHUB_OUTPUT ;;
+              *) echo "env=other" ;;
+            esac
+          fi
+
+      - name: get message from workflow
+        id: get-message
+        shell: bash
+        run: |
+          if [ '${{ github.event_name }}' == 'workflow_dispatch' ];
+          then
+            echo "message=:trollface:" >> $GITHUB_OUTPUT
+          else
+            echo "message=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+          fi

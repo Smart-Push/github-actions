@@ -1,0 +1,98 @@
+name: Code analysis
+on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
+      SONAR_HOST_URL:
+        required: true
+    inputs:
+      src_path:
+        description: path to sources files
+        required: false
+        type: string
+      language:
+        description: type of language (PHP/TS/Node)
+        required: false
+        type: string
+      release:
+        description: release number
+        required: false
+        type: string
+
+jobs:
+  debug-context:
+    name: display current context
+    runs-on: ubuntu-latest
+    steps:
+      - name: echo-context
+        run: echo '${{ toJSON(inputs) }}'
+
+  code-analysis-php:
+    name: PHP code analysis
+    if: inputs.language == 'php'
+    uses: Smart-Push/github-actions/.github/workflows/code-analysis-php.yml@reusable_workflows
+    secrets: inherit
+    with:
+      src_path: ${{ inputs.src_path }}
+
+  code-analysis-node:
+    name: Node code analysis
+    if: inputs.language == 'node'
+    uses: Smart-Push/github-actions/.github/workflows/code-analysis-node.yml@reusable_workflows
+    secrets: inherit
+    with:
+      src_path: ${{ inputs.src_path }}
+
+  sonarqube-workflow:
+    name: Execute SonarQube
+    runs-on: ubuntu-latest-4-cores
+    if: ${{ success() }}
+    needs: [ code-analysis-php, code-analysis-node ] #, code-analysis-ts, code-analysis-node ]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download analysis artifacts
+        id: download
+        uses: actions/download-artifact@v3
+        with:
+          name: analysis-workflow-artifact
+          path: ${{ inputs.src_path }}
+
+      # Runs only on Pull Request opened where target branch is develop
+      - name: SonarQube - PR decoration
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        uses: SonarSource/sonarqube-scan-action@v1.1.0
+        with:
+          projectBaseDir: ${{ inputs.src_path }}
+          args: >
+            -Dsonar.php.phpstan.reportPaths=phpstan-results.json
+            -Dsonar.php.coverage.reportPaths=coverage.xml
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Runs after Pull Request decoration to lock merge if quality gate fails
+      - name: SonarQube Quality Gate check
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        uses: SonarSource/sonarqube-quality-gate-action@v1.0.0
+        # Force to fail step after specific time
+        timeout-minutes: 5
+        with:
+          scanMetadataReportFile: ${{ github.workspace }}/${{ inputs.src_path }}/.scannerwork/report-task.txt
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # Runs only when a Pull Request is merged onto master branch (default github branch)
+      - name: SonarQube - Release
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == github.event.repository.default_branch
+        uses: SonarSource/sonarqube-scan-action@v1.1.0
+        with:
+          projectBaseDir: ${{ inputs.src_path }}
+          args: >
+            -Dsonar.php.tests.reportPath=tests-report.xml
+            -Dsonar.projectVersion=${{ inputs.release }}

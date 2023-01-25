@@ -1,0 +1,131 @@
+name: Deploy code
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: which app to deploy
+        required: true
+        type: string
+      environment:
+        description: on which env to deploy current branch
+        required: true
+        type: string
+      text:
+        description: message to display during deployment
+        required: true
+        type: string
+      language:
+        description: type of language (PHP/TS/Node)
+        required: true
+        type: string
+
+jobs:
+  publish-branch:
+    name: Publish / ${{ inputs.environment }}
+    env:
+      APP_NAME: ${{ github.event.repository.name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "MS Teams start deployment"
+        uses: toko-bifrost/ms-teams-deploy-card@master #  or "./" if in a local set-up
+        if: always()
+        with:
+          github-token: ${{ github.token }}
+          webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+          show-on-start: true
+          card-layout-start: complete
+          environment: ${{ inputs.environment }}
+          include-files: false
+
+      # Calculate destination folder name
+      - name: Calculate destination folder
+        id: dst-folder
+        run: echo "folder=$(date +%F.%H%M%S)" >> $GITHUB_OUTPUT
+
+      # Download artifact
+      - name: Download code artifact
+        if: github.event_name != 'release'
+        uses: actions/download-artifact@v3
+        with:
+          name: analysis-workflow-artifact
+
+      # Download release Asset
+      - name: Download release asset
+        if: github.event_name == 'release'
+        uses: robinraju/release-downloader@v1.6
+        with:
+          file: ${{ github.event.release.assets[0].name }}
+
+      # Checkout Smartpush action
+      - name: Checkout Smartpush action
+        uses: actions/checkout@v3
+        with:
+          repository: Smart-Push/github-actions
+          ref: v1.0.5
+          token: ${{ secrets.REPOS_ACCESS_TOKEN }}
+          path: ./.github/actions
+
+      # Get hosts matrix
+      - name: Get hosts matrix
+        id: hosts-matrix
+        uses: ./.github/actions/hosts-matrix
+
+      - name: Prepare SSH
+        uses: shimataro/ssh-key-action@v2.4.0
+        with:
+          key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.DEPLOY_KNOWN_HOST }}
+
+      - name: Deploy PHP code
+        if: inputs.language == 'php'
+        env:
+          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
+          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
+        run: |
+          scp -r dist/apps/${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
+          ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
+            cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
+            cd current && ln -fs ~/shared/data
+          EOF
+
+#      - name: Deploy PHP code
+#        if: ${{ inputs.language }} == "php"
+#        env:
+#          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
+#          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
+#        run: |
+#          scp -r ./${{ env.PATH_RELEASES }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
+#          ssh ${{ env.TARGET_ENV }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
+#            cd ${{ env.PATH_RELEASES }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ github.base_ref }} current
+#            cd current
+#            if [ -L .env ]; then unlink .env; fi && ln -fs ~/shared/api/.env
+#            if [ -L data ]; then unlink data; fi && ln -fs ~/shared/data
+#            cd public && ln -fs ~/shared/data && ln -fs ~/shared/api/opcache.php && ln -fs ~/shared/coupon && cd ..
+#            APP_ENV=preprod ~/composer check-platform-reqs
+#            APP_ENV=preprod ~/composer install --verbose --prefer-dist --no-progress --no-interaction
+#            php bin/console doctrine:migrations:migrate -n --allow-no-migration
+#            php bin/console cache:pool:clear cache.app cache.system doctrine.result_cache_pool doctrine.query_cache_pool doctrine.metadata_cache_pool
+#            ~/shared/api/opcache.sh ${{ github.base_ref}}
+#          EOF
+
+      - name: Deploy Node code
+        if: inputs.language == 'node'
+        env:
+          username: ${{ fromJSON(steps.hosts-matrix.outputs.host)[inputs.environment] }}
+          target: ~/${{ env.APP_NAME }}/releases/${{ steps.dst-folder.outputs.folder }}
+        run: |
+          scp -r ${{ env.APP_NAME }}/ ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }}:${{ env.target }}
+          ssh ${{ env.username }}@${{ secrets.DEPLOY_SSH_HOST }} <<EOF
+            cd ${{ env.APP_NAME }} && if [ -L current ]; then unlink current; fi && ln -fs releases/${{ steps.dst-folder.outputs.folder }} current
+            cd current && ln -fs ~/shared
+          EOF
+
+      # Teams - deployment result
+      - name: MS Teams deployment result
+        uses: toko-bifrost/ms-teams-deploy-card@master
+        if: always()
+        with:
+          github-token: ${{ github.token }}
+          webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+          show-on-exit: true
+          card-layout-exit: compact
